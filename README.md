@@ -36,6 +36,18 @@ Mock login with real checks: `POST /api/auth/login { username, password }` retur
 | Update status (with reason) | ✅ | ✅ |
 | Add / remove equipment | ❌ 403 | ✅ |
 
+## API (so far)
+
+All routes except health and login need `Authorization: Bearer <token>`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/api/sites` | Sites with per-status counts and `staleCount`, plus `types` for the type filter. One call feeds the sidebar, stat cards and dropdown |
+| `GET` | `/api/equipment` | `q` (name/type search), `siteId`, `type`, `status=DOWN,DEGRADED`, `stale=true\|false`, `sort=name\|lastCheckedAt\|status\|site`, `order`, `page`, `pageSize` (max 100). Returns `{ data, page, pageSize, total }` |
+| `GET` | `/api/equipment/:id` | One item, including `version` and `lastCheckedBy` |
+
+Seed dates are relative to when you seeded, so items drift into "stale" over the days; `npm run db:reset` refreshes them.
+
 ## Design notes (so far)
 
 - **Conflict protection: optimistic concurrency.** Each equipment row has a `version`. Writes send the version they read; the `UPDATE ... WHERE version = $n` affects 0 rows if someone else changed it first, and the API returns `409 CONFLICT` with the current state. No locks to go stale when a field device drops off the network.
@@ -43,6 +55,9 @@ Mock login with real checks: `POST /api/auth/login { username, password }` retur
 - **History IDs are UUIDs** so an offline client can generate them; replaying a queued update twice hits the primary key rather than double-applying.
 - **Status update + history insert run in one transaction.**
 - **Consistent errors:** `{ "error": { "code", "message", "details?" } }`.
+- **Stale rule in one place.** `equipment/rules.ts` defines "over 7 days"; both the SQL `stale` filter and each row's `isStale` use it, and the server's clock decides, not each device's.
+- **Types come with `/api/sites`, not the list response.** The list re-runs on every filter and page change; types are reference data that rarely change. Putting them in a filtered response would also make picking a type remove the other options from the dropdown.
+- **Offset pagination with a tie-breaker** (`ORDER BY <sort>, equip_id`), so rows never repeat or go missing between pages. Fine for hundreds of items; keyset pagination is the next step for much larger sites.
 - **Stateless JWT auth (HS256, 12h ≈ one shift).** It survives spotty connections because there's no server session. The acting user for history comes from the verified token, never the request body. 401 means not authenticated, 403 means wrong role. Trade-off: no server-side logout or revocation (logout drops the token on the client), and a role change applies at the next login.
 
 ## AI usage
