@@ -1,18 +1,18 @@
 {
+  // Used by the editor and `npm run typecheck`: covers app code, tests and config.
+  // `npm run build` uses tsconfig.build.json, which emits app code only.
   "compilerOptions": {
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "rootDir": "src",
-    "outDir": "dist",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
+    "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.ts"]
+  "include": ["src", "test", "vitest.config.ts"]
 }

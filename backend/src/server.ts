@@ -12,4 +12,3 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     server.close(() => void pool.end());
   });
 }
-1;
