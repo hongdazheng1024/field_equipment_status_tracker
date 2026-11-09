@@ -1,0 +1,46 @@
+/* Design tokens. Status colors are always paired with text and an icon in
+   the UI, never used alone (accessibility). */
+:root {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-border: #d9dce1;
+  --color-text: #1d2330;
+  --color-text-muted: #5b6475;
+  --color-primary: #1f5fbf;
+
+  --status-operational: #1e7b3c;
+  --status-degraded: #9a6200;
+  --status-down: #b3261e;
+  --status-maintenance: #4b5bb5;
+  --stale: #8a4b00;
+
+  --radius: 6px;
+  --space: 8px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  font-family: var(--font);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.4;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Visible keyboard focus everywhere. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.placeholder {
+  padding: calc(var(--space) * 4);
+}

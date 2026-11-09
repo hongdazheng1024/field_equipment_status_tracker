@@ -1,0 +1,18 @@
+{
+  "name": "field-equipment-status-tracker",
+  "private": true,
+  "description": "Runs the backend and frontend together. Each app also works on its own from its folder.",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "setup": "npm install && npm --prefix backend install && npm --prefix frontend install && npm --prefix backend run db:reset",
+    "dev": "concurrently --kill-others-on-fail --names api,web --prefix-colors blue,green \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "lint": "npm --prefix frontend run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}

@@ -2,22 +2,29 @@
 
 Track equipment status across field sites, with change history, stale-check highlighting, and conflict-safe updates.
 
-## Running the backend
+## Running it
 
-Requires Node 20+ (`nvm use` picks it up from `.nvmrc`) and a local PostgreSQL.
+Requires Node 20.19+ (`nvm use` picks it up from `.nvmrc`) and a local PostgreSQL.
 
 ```bash
-cd backend
-cp .env.example .env          # adjust DATABASE_URL if needed
+cp backend/.env.example backend/.env   # adjust DATABASE_URL if needed
 createdb field_equipment
-npm install
-npm run db:reset              # drop, migrate, seed
-npm run dev                   # http://localhost:4000/api/health
+npm run setup                          # installs everything, migrates and seeds
+npm run dev                            # API on :4000, web app on http://localhost:5173
 ```
 
 Seeded accounts (password `password`): `olivia`, `omar` (operators), `sara` (supervisor).
 
-| Script | What it does |
+From the repo root: `npm test` runs both test suites, `npm run typecheck` both type checks, and `npm run lint` lints the frontend. The web app's dev server proxies `/api` to the API, so the backend needs no CORS setup.
+
+| Frontend script (`frontend/`) | What it does |
+|---|---|
+| `npm run dev` | Vite dev server with hot reload |
+| `npm test` | Vitest + React Testing Library (jsdom); API calls are mocked |
+| `npm run lint` | oxlint |
+| `npm run build` | Type check, then production build |
+
+| Backend script (`backend/`) | What it does |
 |---|---|
 | `npm run dev` | API with reload on change |
 | `npm run db:migrate` | Apply pending SQL migrations in `src/db/migrations` |
