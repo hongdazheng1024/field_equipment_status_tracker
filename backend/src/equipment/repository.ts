@@ -1,6 +1,6 @@
 import { pool } from "../db/pool.js";
 import { isStale, staleCutoff, type EquipmentStatus } from "./rules.js";
-import type { ListQuery } from "./schemas.js";
+import type { CreateEquipmentBody, ListQuery } from "./schemas.js";
 
 /** The equipment shape every endpoint returns. */
 export interface Equipment {
@@ -128,4 +128,44 @@ export async function getEquipment(id: number, now: Date): Promise<Equipment | n
     [id],
   );
   return rows[0] ? toEquipment(rows[0], now) : null;
+}
+
+export async function siteExists(siteId: number): Promise<boolean> {
+  const { rowCount } = await pool.query("SELECT 1 FROM sites WHERE site_id = $1", [siteId]);
+  return rowCount === 1;
+}
+
+/** Adds an item, counted as checked now. Returns the new id. */
+export async function createEquipment(input: CreateEquipmentBody): Promise<number> {
+  const { rows } = await pool.query<{ equip_id: number }>(
+    `INSERT INTO equipment (name, type, site_id, status)
+     VALUES ($1, $2, $3, $4)
+     RETURNING equip_id`,
+    [input.name, input.type, input.siteId, input.status],
+  );
+  return rows[0]!.equip_id;
+}
+
+/**
+ * Soft delete: the row and its history stay, it just disappears from the app.
+ * One conditional UPDATE is atomic on its own, so no explicit lock is needed.
+ * If it matched nothing, a second look tells "gone" apart from "changed since".
+ */
+export async function softDeleteEquipment(
+  id: number,
+  version: number,
+): Promise<"deleted" | "not_found" | "version_conflict"> {
+  const { rowCount } = await pool.query(
+    `UPDATE equipment
+        SET deleted_at = now(), updated_at = now(), version = version + 1
+      WHERE equip_id = $1 AND version = $2 AND deleted_at IS NULL`,
+    [id, version],
+  );
+  if (rowCount === 1) return "deleted";
+
+  const { rowCount: live } = await pool.query(
+    "SELECT 1 FROM equipment WHERE equip_id = $1 AND deleted_at IS NULL",
+    [id],
+  );
+  return live ? "version_conflict" : "not_found";
 }
