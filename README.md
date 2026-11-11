@@ -73,6 +73,12 @@ Seed dates are relative to when you seeded, so items drift into "stale" over the
 - **Offset pagination with a tie-breaker** (`ORDER BY <sort>, equip_id`), so rows never repeat or go missing between pages. Fine for hundreds of items; keyset pagination is the next step for much larger sites.
 - **Stateless JWT auth (HS256, 12h ≈ one shift).** It survives spotty connections because there's no server session. The acting user for history comes from the verified token, never the request body. 401 means not authenticated, 403 means wrong role. Trade-off: no server-side logout or revocation (logout drops the token on the client), and a role change applies at the next login.
 
+### Frontend
+
+- **Pages:** `/login`, `/` (dashboard, logged-in only), and a 404 for anything else. Dashboard filters and the open edit panel live in the query string (`/?site=2&status=DOWN&edit=31`), so refresh and shared links keep the view. Logging in returns you to where you were heading.
+- **Session in `localStorage`** so a reload, even offline, keeps you logged in. On load the token is re-checked with `/api/auth/me`: a 401 logs out with "session expired", a network error keeps you in. Logout clears the React Query cache so the next person on the device can't see the previous user's data. Trade-off: a script injected via XSS could read the token. An httpOnly cookie would avoid that, at the cost of CSRF handling.
+- **Role switch:** demo account buttons on the login page (log out, click another account).
+
 ## Skipped (so far)
 
 - Editing an item's name, type or site (not in the brief; status updates only).

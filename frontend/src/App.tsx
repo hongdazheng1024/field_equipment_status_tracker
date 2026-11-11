@@ -1,24 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "./api/client";
+import { Route, Routes } from "react-router";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { DashboardPage } from "./pages/DashboardPage";
+import { LoginPage } from "./pages/LoginPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 /**
- * Placeholder until the login page and dashboard are built: proves the
- * frontend reaches the API through the Vite proxy.
+ * Routes only; the router and providers are set up in main.tsx (and in the
+ * test helper), so tests can render this with an in-memory router.
  */
 function App() {
-  const health = useQuery({
-    queryKey: ["health"],
-    queryFn: ({ signal }) => apiFetch<{ status: string }>("/health", { signal }),
-  });
-
   return (
-    <main className="placeholder">
-      <h1>Field Equipment Tracker</h1>
-      <p role="status">
-        API:{" "}
-        {health.isPending ? "checking…" : health.isError ? `unreachable (${health.error.message})` : health.data.status}
-      </p>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        {/* Filters and the edit panel live in the query string: /?site=2&edit=31 */}
+        <Route path="/" element={<DashboardPage />} />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 
