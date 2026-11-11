@@ -78,12 +78,20 @@ Seed dates are relative to when you seeded, so items drift into "stale" over the
 - **Pages:** `/login`, `/` (dashboard, logged-in only), and a 404 for anything else. Dashboard filters and the open edit panel live in the query string (`/?site=2&status=DOWN&edit=31`), so refresh and shared links keep the view. Logging in returns you to where you were heading.
 - **Session in `localStorage`** so a reload, even offline, keeps you logged in. On load the token is re-checked with `/api/auth/me`: a 401 logs out with "session expired", a network error keeps you in. Logout clears the React Query cache so the next person on the device can't see the previous user's data. Trade-off: a script injected via XSS could read the token. An httpOnly cookie would avoid that, at the cost of CSRF handling.
 - **Role switch:** demo account buttons on the login page (log out, click another account).
+- **Dashboard data:** two React Query queries, no copies in `useState`. `GET /api/sites` feeds the sidebar, the stat cards and the type dropdown; `GET /api/equipment` returns one page (20 rows) of the table. React Query handles loading/error state, caching, and ignoring a slow response for a site you've already clicked away from.
+- **Stat cards count from the site summary, not the table rows.** The table only holds one page, so counting its rows would undercount. `useMemo` adds up the per-site counts (one site, or all of them for "All sites").
+- **All filtering is server-side.** A status card, chip, the type dropdown, "Stale only" or a search changes the URL, goes back to page 1 and refetches. Filtering the loaded page in the browser would hide matches on other pages and break the page count. Cards are shortcuts for one status (or stale); the chips and checkbox allow combinations.
+- **Search waits 300 ms after typing stops** and replaces the history entry, so the Back button isn't one step per letter.
+- **While a new page or filter loads, the current rows stay visible** with an "Updating…" note, instead of flashing an empty table. Each response records its own fetch time, which "3 days ago" and "Updated 10:32" are based on.
+- **Accessibility:** status shows as symbol + text + color, never color alone; stale rows get a tinted background, a left marker and a "Stale" badge. Cards and chips are toggle buttons with `aria-pressed`, the selected site and page use `aria-current`, and each Edit button is labelled with the equipment name.
+- **Edit** is shown to operators and supervisors (both may change status). For now it only logs `Edit equipment <id>` to the console; the edit panel is next.
 
 ## Skipped (so far)
 
 - Editing an item's name, type or site (not in the brief; status updates only).
 - `created_by` on equipment: who added an item isn't recorded.
 - History of removed items isn't exposed through the API (it stays in the database).
+- Sorting by column header (the API already supports `sort` and `order`).
 
 ## AI usage
 
