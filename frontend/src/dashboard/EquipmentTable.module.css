@@ -1,0 +1,110 @@
+/* Wide tables scroll sideways on small screens instead of squashing. */
+.wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.table th,
+.table td {
+  padding: var(--space) calc(var(--space) * 1.5);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table thead th {
+  background: var(--color-bg);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.id {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  font-weight: 600;
+}
+
+/* The brief's stale highlight: tinted row plus a left marker. */
+.staleRow {
+  background: #fff7eb;
+}
+
+.staleRow > :first-child {
+  box-shadow: inset 4px 0 0 var(--stale);
+}
+
+.status {
+  font-weight: 600;
+}
+
+.OPERATIONAL {
+  color: var(--status-operational);
+}
+
+.DEGRADED {
+  color: var(--status-degraded);
+}
+
+.DOWN {
+  color: var(--status-down);
+}
+
+.IN_MAINTENANCE {
+  color: var(--status-maintenance);
+}
+
+.by {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.staleBadge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px var(--space);
+  border-radius: 999px;
+  background: #fde9cc;
+  color: var(--stale);
+}
+
+.edit {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 4px calc(var(--space) * 1.5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.edit:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

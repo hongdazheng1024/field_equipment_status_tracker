@@ -7,7 +7,15 @@ import { OLIVIA, SARA, renderApp } from "../test/renderApp";
 
 // Component test: the real LoginPage, router and AuthProvider, with only the
 // API calls replaced.
-vi.mock("../api/endpoints", () => ({ api: { login: vi.fn(), me: vi.fn() } }));
+vi.mock("../api/endpoints", () => ({
+  api: {
+    login: vi.fn(),
+    me: vi.fn(),
+    // The dashboard loads these on mount; an empty account keeps these tests about routing/auth.
+    getSites: vi.fn(() => Promise.resolve({ data: [], types: [] })),
+    listEquipment: vi.fn(() => Promise.resolve({ data: [], page: 1, pageSize: 20, total: 0 })),
+  },
+}));
 const login = vi.mocked(api.login);
 
 beforeEach(() => {

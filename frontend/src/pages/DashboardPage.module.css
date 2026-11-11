@@ -1,10 +1,16 @@
+/* Header across the top, sites on the left, content on the right. */
 .layout {
   min-height: 100vh;
   display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
   grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
 }
 
 .header {
+  grid-area: header;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -12,6 +18,10 @@
   padding: calc(var(--space) * 1.5) calc(var(--space) * 3);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+}
+
+.layout > nav {
+  grid-area: sidebar;
 }
 
 .appName {
@@ -34,7 +44,10 @@
   color: var(--color-primary);
 }
 
-.logout {
+.logout,
+.refresh,
+.message button,
+.error button {
   font: inherit;
   padding: calc(var(--space) / 2) calc(var(--space) * 1.5);
   border: 1px solid var(--color-border);
@@ -44,9 +57,75 @@
 }
 
 .main {
+  grid-area: main;
+  display: grid;
+  align-content: start;
+  gap: calc(var(--space) * 2);
   padding: calc(var(--space) * 3);
 }
 
-.placeholder {
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.updated {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  font-size: 0.85rem;
   color: var(--color-text-muted);
+}
+
+.message {
+  padding: calc(var(--space) * 4);
+  text-align: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+.message p {
+  margin: 0 0 var(--space);
+}
+
+.error {
+  margin: 0;
+  padding: calc(var(--space) * 1.5);
+  color: var(--status-down);
+  background: #fdecea;
+  border-radius: var(--radius);
+}
+
+.error p {
+  margin: 0 0 var(--space);
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "main";
+  }
+
+  .header {
+    flex-wrap: wrap;
+    padding: calc(var(--space) * 1.5) calc(var(--space) * 2);
+  }
+
+  .main {
+    padding: calc(var(--space) * 2);
+  }
 }

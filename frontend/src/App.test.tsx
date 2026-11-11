@@ -6,7 +6,15 @@ import { loadSession } from "./auth/session";
 import { OLIVIA, renderApp, seedSession } from "./test/renderApp";
 
 // Routing and session behaviour across the three pages.
-vi.mock("./api/endpoints", () => ({ api: { login: vi.fn(), me: vi.fn() } }));
+vi.mock("./api/endpoints", () => ({
+  api: {
+    login: vi.fn(),
+    me: vi.fn(),
+    // The dashboard loads these on mount; an empty account keeps these tests about routing/auth.
+    getSites: vi.fn(() => Promise.resolve({ data: [], types: [] })),
+    listEquipment: vi.fn(() => Promise.resolve({ data: [], page: 1, pageSize: 20, total: 0 })),
+  },
+}));
 const me = vi.mocked(api.me);
 
 beforeEach(() => {
