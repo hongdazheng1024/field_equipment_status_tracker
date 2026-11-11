@@ -40,7 +40,3 @@ body {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
-
-.placeholder {
-  padding: calc(var(--space) * 4);
-}
