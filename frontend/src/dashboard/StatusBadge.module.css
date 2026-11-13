@@ -1,0 +1,20 @@
+.status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.OPERATIONAL {
+  color: var(--status-operational);
+}
+
+.DEGRADED {
+  color: var(--status-degraded);
+}
+
+.DOWN {
+  color: var(--status-down);
+}
+
+.IN_MAINTENANCE {
+  color: var(--status-maintenance);
+}

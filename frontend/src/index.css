@@ -30,6 +30,12 @@
   box-sizing: border-box;
 }
 
+/* Reserve the scrollbar's space so the page doesn't shift sideways when a
+   side panel stops it scrolling. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
