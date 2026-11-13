@@ -16,7 +16,8 @@ export interface DashboardFilters {
   page: number;
 }
 
-function positiveInt(value: string | null): number | undefined {
+/** "12" -> 12; anything else (missing, "abc", "0", "-3") -> undefined. */
+export function positiveInt(value: string | null): number | undefined {
   if (!value || !/^\d+$/.test(value)) return undefined;
   const n = Number(value);
   return n >= 1 ? n : undefined;

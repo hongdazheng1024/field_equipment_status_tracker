@@ -51,26 +51,6 @@
   box-shadow: inset 4px 0 0 var(--stale);
 }
 
-.status {
-  font-weight: 600;
-}
-
-.OPERATIONAL {
-  color: var(--status-operational);
-}
-
-.DEGRADED {
-  color: var(--status-degraded);
-}
-
-.DOWN {
-  color: var(--status-down);
-}
-
-.IN_MAINTENANCE {
-  color: var(--status-maintenance);
-}
-
 .by {
   font-size: 0.8rem;
   color: var(--color-text-muted);

@@ -1,5 +1,6 @@
 import type { Equipment } from "../api/types";
-import { formatDateTime, formatRelative, STATUS_ICONS, STATUS_LABELS } from "./format";
+import { formatDateTime, formatRelative } from "./format";
+import { StatusBadge } from "./StatusBadge";
 import styles from "./EquipmentTable.module.css";
 
 interface Props {
@@ -37,10 +38,7 @@ export function EquipmentTable({ items, now, onEdit }: Props) {
               <td>{item.type}</td>
               <td>{item.site.name}</td>
               <td>
-                <span className={`${styles.status} ${styles[item.status]}`}>
-                  <span aria-hidden="true">{STATUS_ICONS[item.status]} </span>
-                  {STATUS_LABELS[item.status]}
-                </span>
+                <StatusBadge status={item.status} />
               </td>
               <td>
                 <time dateTime={item.lastCheckedAt} title={formatDateTime(item.lastCheckedAt)}>

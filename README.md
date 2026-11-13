@@ -84,7 +84,14 @@ Seed dates are relative to when you seeded, so items drift into "stale" over the
 - **Search waits 300 ms after typing stops** and replaces the history entry, so the Back button isn't one step per letter.
 - **While a new page or filter loads, the current rows stay visible** with an "Updating…" note, instead of flashing an empty table. Each response records its own fetch time, which "3 days ago" and "Updated 10:32" are based on.
 - **Accessibility:** status shows as symbol + text + color, never color alone; stale rows get a tinted background, a left marker and a "Stale" badge. Cards and chips are toggle buttons with `aria-pressed`, the selected site and page use `aria-current`, and each Edit button is labelled with the equipment name.
-- **Edit** is shown to operators and supervisors (both may change status). For now it only logs `Edit equipment <id>` to the console; the edit panel is next.
+- **Edit panel** (operators and supervisors; both may change status): a slide-over from the right, opened with `?edit=<id>` in the URL so a reload reopens it. It shows the current status, the status form and the item's change history (who, when, old → new, reason).
+  - **Native `<dialog>` with `showModal()`**: the browser makes the page behind inert (no clicks, no Tab), draws the dimmed backdrop and keeps focus inside. A backdrop click, Escape, ✕ or Cancel closes it; if a reason was typed it asks "Discard your changes?" first. Page scrolling is locked while it's open, and focus returns to the row's Edit button on close. It can't be closed mid-save.
+  - **Reason** is required and capped at 500 characters (the API's limit), with a live counter.
+  - **Keeping the same status is allowed** and labelled "Confirm Down": it records a check and resets "last checked", which is how a stale item gets cleared.
+  - **Conflicts:** the panel sends the `version` it was based on. On a 409 it stays open, keeps what the user chose and typed, shows who changed the item and to what, and switches to the new version, so resubmitting is a deliberate decision.
+  - **Retries are safe:** each save carries a client-generated `changeId`. After a network error the same id is reused, so if the first attempt did reach the server it isn't applied twice; editing the form afterwards makes it a new change with a new id.
+  - **After a save** the panel closes, the table, cards and sidebar badges refetch (React Query invalidation), and a confirmation is announced via `role="status"`.
+  - Times that are in the future relative to the client (a change made after the panel opened, or device clock skew) show as "just now", never "in 3 minutes".
 
 ## Skipped (so far)
 

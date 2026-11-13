@@ -209,15 +209,6 @@ describe("dashboard", () => {
     expect(screen.getByText("12 days ago")).toBeInTheDocument();
   });
 
-  it("the edit button logs the equipment id", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    const { user } = await renderDashboard();
-
-    await user.click(screen.getByRole("button", { name: "Edit Pump 3" }));
-
-    expect(log).toHaveBeenCalledWith("Edit equipment 9");
-  });
-
   it("shows an empty state that can clear the filters", async () => {
     listEquipment.mockResolvedValue(page([]));
     const { user } = renderApp("/?status=DOWN&q=zzz");

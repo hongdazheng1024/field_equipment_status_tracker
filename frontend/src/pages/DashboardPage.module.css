@@ -129,3 +129,14 @@
     padding: calc(var(--space) * 2);
   }
 }
+
+/* Confirmation after a save. The empty <p role="status"> stays in the page so
+   screen readers notice when text appears in it. */
+.notice {
+  margin: 0;
+  padding: var(--space) calc(var(--space) * 1.5);
+  border-radius: var(--radius);
+  background: #e7f4ec;
+  color: var(--status-operational);
+  font-weight: 600;
+}

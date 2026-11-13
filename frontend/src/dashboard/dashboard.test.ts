@@ -71,6 +71,7 @@ describe("formatRelative", () => {
     ["2026-05-10T09:00:00Z", "3 hours ago"],
     ["2026-05-09T12:00:00Z", "yesterday"],
     ["2026-04-28T12:00:00Z", "12 days ago"],
+    ["2026-05-10T12:05:00Z", "just now"], // future (clock skew): never "in 5 minutes"
   ])("%s -> %s", (iso, expected) => {
     expect(formatRelative(iso, now)).toBe(expected);
   });
