@@ -3,11 +3,13 @@ import { useState, type FormEvent } from "react";
 import { newChangeId } from "../api/changeId";
 import { ApiError } from "../api/client";
 import { api } from "../api/endpoints";
+import { errorMessage } from "../api/errorMessage";
 import { STATUSES, type Equipment, type EquipmentStatus } from "../api/types";
 import { SidePanel } from "../components/SidePanel";
 import { formatDateTime, formatRelative, STATUS_LABELS } from "./format";
 import { StatusBadge } from "./StatusBadge";
 import { StatusHistory } from "./StatusHistory";
+import panelForm from "../components/PanelForm.module.css";
 import styles from "./EditStatusPanel.module.css";
 
 export const REASON_MAX = 500; // matches the API's limit (characters)
@@ -21,15 +23,6 @@ interface Props {
 }
 
 type StatusChangeBody = Parameters<typeof api.changeStatus>[1];
-
-/** Turns an API error into the message shown in the panel. */
-function errorMessage(err: unknown): string {
-  if (!(err instanceof ApiError)) return "Something went wrong. Please try again.";
-  if (err.code === "VALIDATION_ERROR" && Array.isArray(err.details)) {
-    return (err.details as { message: string }[]).map((d) => d.message).join(". ");
-  }
-  return err.message;
-}
 
 export function EditStatusPanel({ equipmentId, initial, onClose, onSaved }: Props) {
   const queryClient = useQueryClient();
@@ -135,12 +128,12 @@ export function EditStatusPanel({ equipmentId, initial, onClose, onSaved }: Prop
       onRequestClose={requestClose}
       footer={
         <>
-          <button type="button" className={styles.secondary} onClick={requestClose} disabled={mutation.isPending}>
+          <button type="button" className={panelForm.secondary} onClick={requestClose} disabled={mutation.isPending}>
             Cancel
           </button>
           {!loadFailed && (
-            <button type="submit" form="edit-status-form" className={styles.primary} disabled={!canSubmit}>
-              {mutation.isPending && <span className={styles.spinner} aria-hidden="true" />}
+            <button type="submit" form="edit-status-form" className={panelForm.primary} disabled={!canSubmit}>
+              {mutation.isPending && <span className={panelForm.spinner} aria-hidden="true" />}
               {submitLabel}
             </button>
           )}
@@ -148,11 +141,11 @@ export function EditStatusPanel({ equipmentId, initial, onClose, onSaved }: Prop
       }
     >
       {loadFailed && (
-        <p role="alert" className={styles.error}>
+        <p role="alert" className={panelForm.error}>
           Couldn't load this equipment. {errorMessage(itemQuery.error)}
         </p>
       )}
-      {!base && !loadFailed && <p className={styles.muted}>Loading…</p>}
+      {!base && !loadFailed && <p className={panelForm.muted}>Loading…</p>}
 
       {base && status && (
         <>
@@ -182,14 +175,14 @@ export function EditStatusPanel({ equipmentId, initial, onClose, onSaved }: Prop
             </div>
           )}
           {error && (
-            <p role="alert" className={styles.error}>
+            <p role="alert" className={panelForm.error}>
               {removed ? "This equipment has been removed, so its status can't be changed." : error}
             </p>
           )}
 
-          <form id="edit-status-form" className={styles.form} onSubmit={handleSubmit} noValidate>
-            <fieldset disabled={mutation.isPending || removed} className={styles.fieldset}>
-              <label className={styles.field}>
+          <form id="edit-status-form" className={panelForm.form} onSubmit={handleSubmit} noValidate>
+            <fieldset disabled={mutation.isPending || removed} className={panelForm.fieldset}>
+              <label className={panelForm.field}>
                 New status
                 <select
                   value={status}
@@ -207,12 +200,12 @@ export function EditStatusPanel({ equipmentId, initial, onClose, onSaved }: Prop
                 </select>
               </label>
               {status === base.status && (
-                <p className={styles.hint}>Keeping the same status records a check and resets “last checked”.</p>
+                <p className={panelForm.hint}>Keeping the same status records a check and resets “last checked”.</p>
               )}
 
-              <label className={styles.field}>
+              <label className={panelForm.field}>
                 <span>
-                  Reason <span className={styles.required}>(required)</span>
+                  Reason <span className={panelForm.required}>(required)</span>
                 </span>
                 <textarea
                   rows={4}
