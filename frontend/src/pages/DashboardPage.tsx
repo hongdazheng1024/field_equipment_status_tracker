@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/endpoints";
 import type { Equipment, EquipmentQuery } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { CreateEquipmentPanel } from "../dashboard/CreateEquipmentPanel";
 import { EditStatusPanel } from "../dashboard/EditStatusPanel";
 import { EquipmentFilters } from "../dashboard/EquipmentFilters";
 import { EquipmentTable } from "../dashboard/EquipmentTable";
@@ -15,7 +16,7 @@ import {
   useDashboardFilters,
   type DashboardFilters,
 } from "../dashboard/useDashboardFilters";
-import { useEditParam } from "../dashboard/useEditParam";
+import { usePanelParams } from "../dashboard/usePanelParams";
 import styles from "./DashboardPage.module.css";
 
 export const PAGE_SIZE = 20;
@@ -37,7 +38,9 @@ const CLEARED: Partial<DashboardFilters> = {
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const { filters, updateFilters } = useDashboardFilters();
-  const { editId, openEdit, closeEdit } = useEditParam();
+  const { editId, creating, openEdit, openCreate, closePanel } =
+    usePanelParams();
+  const isSupervisor = user?.role === "SUPERVISOR";
   // Confirmation after a save, read out by screen readers via role="status".
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -84,6 +87,11 @@ export function DashboardPage() {
   function handleEdit(item: Equipment) {
     setNotice(null);
     openEdit(item.id);
+  }
+
+  function handleCreate() {
+    setNotice(null);
+    openCreate();
   }
 
   function refresh() {
@@ -149,7 +157,7 @@ export function DashboardPage() {
         <div className={styles.account}>
           <span>{user?.displayName}</span>
           <span className={styles.role}>
-            {user?.role === "SUPERVISOR" ? "Supervisor" : "Operator"}
+            {isSupervisor ? "Supervisor" : "Operator"}
           </span>
           <button
             type="button"
@@ -192,6 +200,15 @@ export function DashboardPage() {
             >
               Refresh
             </button>
+            {isSupervisor && (
+              <button
+                type="button"
+                className={styles.add}
+                onClick={handleCreate}
+              >
+                + Add equipment
+              </button>
+            )}
           </div>
         </div>
 
@@ -237,8 +254,16 @@ export function DashboardPage() {
           key={editId}
           equipmentId={editId}
           initial={list?.data.find((item) => item.id === editId)}
-          onClose={closeEdit}
+          onClose={closePanel}
           onSaved={setNotice}
+        />
+      )}
+      {/* Supervisors only; the API rejects anyone else with 403 anyway. */}
+      {creating && isSupervisor && (
+        <CreateEquipmentPanel
+          defaultSiteId={filters.siteId}
+          onClose={closePanel}
+          onCreated={setNotice}
         />
       )}
     </div>
