@@ -151,6 +151,7 @@ describe("dashboard", () => {
   });
 
   it("restores filters from the URL on load", async () => {
+    listEquipment.mockResolvedValue(page(ITEMS, { total: 45 })); // so page 2 exists
     await renderDashboard("/?site=1&status=DOWN,DEGRADED&type=Pump&q=gen&page=2");
 
     expect(lastListQuery()).toEqual({
@@ -196,6 +197,18 @@ describe("dashboard", () => {
 
     await waitFor(() => expect(lastListQuery()?.page).toBe(3));
     expect(screen.getByTestId("location")).toHaveTextContent("/?page=3");
+  });
+
+  it("moves to the last page when the page is past the end (e.g. after deleting its only item)", async () => {
+    // 22 items = 2 pages; page 3 comes back empty.
+    listEquipment.mockImplementation(async (query) =>
+      page(query.page === 2 ? ITEMS : [], { page: query.page, total: 22 }),
+    );
+    renderApp("/?site=1&page=3");
+
+    expect(await screen.findByRole("cell", { name: "7" })).toBeInTheDocument();
+    expect(lastListQuery()?.page).toBe(2);
+    expect(screen.getByTestId("location")).toHaveTextContent("/?site=1&page=2");
   });
 
   it("keeps the current rows, with correct ages, while the next page loads", async () => {

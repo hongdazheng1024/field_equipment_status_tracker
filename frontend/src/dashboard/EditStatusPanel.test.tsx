@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "../api/client";
 import { api } from "../api/endpoints";
 import type { Equipment, StatusChange } from "../api/types";
-import { OLIVIA, renderApp, seedSession } from "../test/renderApp";
+import { OLIVIA, SARA, renderApp, seedSession } from "../test/renderApp";
 
 // The edit panel inside the real dashboard, with only the API replaced.
 vi.mock("../api/endpoints", () => ({
@@ -15,6 +15,7 @@ vi.mock("../api/endpoints", () => ({
     getEquipment: vi.fn(),
     getHistory: vi.fn(),
     changeStatus: vi.fn(),
+    deleteEquipment: vi.fn(),
   },
 }));
 const m = vi.mocked(api);
@@ -272,6 +273,135 @@ describe("edit status panel", () => {
 
       expect(screen.getByRole("dialog")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    });
+  });
+  describe("delete (supervisors)", () => {
+    beforeEach(() => {
+      seedSession(SARA);
+      m.me.mockResolvedValue({ user: SARA });
+      m.deleteEquipment.mockResolvedValue(undefined);
+    });
+
+    const footerButton = (name: string) => within(screen.getByRole("dialog")).getByRole("button", { name });
+    const confirmation = () => screen.getByRole("group", { name: /Delete Pump 3\?/ });
+
+    it("isn't offered to operators", async () => {
+      seedSession(OLIVIA);
+      m.me.mockResolvedValue({ user: OLIVIA });
+      await openPanel();
+
+      expect(within(screen.getByRole("dialog")).queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    });
+
+    it("asks for confirmation first, and Keep it backs out without a request", async () => {
+      const { user } = await openPanel();
+
+      await user.click(footerButton("Delete"));
+
+      expect(confirmation()).toHaveTextContent("It disappears from the dashboard; its history is kept.");
+      expect(footerButton("Keep it")).toHaveFocus(); // the safe choice, so Enter doesn't delete
+      expect(statusSelect()).toBeDisabled(); // no saving mid-confirmation
+      expect(m.deleteEquipment).not.toHaveBeenCalled();
+
+      await user.click(footerButton("Keep it"));
+
+      expect(screen.queryByRole("group", { name: /Delete Pump 3/ })).not.toBeInTheDocument();
+      expect(footerButton("Delete")).toHaveFocus();
+      expect(m.deleteEquipment).not.toHaveBeenCalled();
+    });
+
+    it("Escape backs out of the confirmation instead of closing the panel", async () => {
+      const { user } = await openPanel();
+      await user.click(footerButton("Delete"));
+
+      fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.queryByRole("group", { name: /Delete Pump 3/ })).not.toBeInTheDocument();
+    });
+
+    it("deletes with the version it showed, then closes, refreshes and moves focus to the confirmation", async () => {
+      let resolve!: () => void;
+      m.deleteEquipment.mockReturnValue(new Promise<void>((r) => (resolve = r)));
+      const { user } = await openPanel();
+      const listCalls = m.listEquipment.mock.calls.length;
+      const sitesCalls = m.getSites.mock.calls.length;
+      const detailCalls = m.getEquipment.mock.calls.length;
+
+      await user.click(footerButton("Delete"));
+      await user.click(footerButton("Delete"));
+
+      expect(m.deleteEquipment).toHaveBeenCalledWith(9, 4);
+      expect(footerButton("Deleting…")).toBeDisabled();
+      expect(footerButton("Keep it")).toBeDisabled();
+      fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+      expect(screen.getByRole("dialog")).toBeInTheDocument(); // can't close mid-delete
+
+      m.listEquipment.mockResolvedValue({ data: [], page: 1, pageSize: 20, total: 0 });
+      resolve();
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(location()).toBe("/?site=1");
+      const notice = await screen.findByText("Deleted Pump 3.");
+      await waitFor(() => expect(notice).toHaveFocus()); // the row's Edit button is gone
+      await waitFor(() => expect(m.listEquipment.mock.calls.length).toBeGreaterThan(listCalls));
+      expect(m.getSites.mock.calls.length).toBeGreaterThan(sitesCalls);
+      expect(m.getEquipment.mock.calls.length).toBe(detailCalls); // not refetched into a 404
+      expect(await screen.findByText("No equipment matches these filters.")).toBeInTheDocument();
+    });
+
+    it("on a conflict, shows the other change and needs a fresh confirmation against the new version", async () => {
+      const theirs: Equipment = {
+        ...PUMP,
+        status: "OPERATIONAL",
+        version: 6,
+        lastCheckedBy: { id: 1, displayName: "Olivia Ortiz" },
+      };
+      m.deleteEquipment.mockRejectedValueOnce(
+        new ApiError(409, "CONFLICT", "This equipment was changed by Olivia Ortiz", { current: theirs }),
+      );
+      const { user } = await openPanel();
+
+      await user.click(footerButton("Delete"));
+      await user.click(footerButton("Delete"));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent("Olivia Ortiz updated this item while you were deciding");
+      expect(alert).toHaveTextContent("now Operational");
+      expect(alert).toHaveTextContent("Nothing was deleted");
+      expect(screen.queryByRole("group", { name: /Delete Pump 3/ })).not.toBeInTheDocument();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      await user.click(footerButton("Delete"));
+      await user.click(footerButton("Delete"));
+      expect(m.deleteEquipment).toHaveBeenLastCalledWith(9, 6);
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
+
+    it("treats an item someone else already deleted as done", async () => {
+      m.deleteEquipment.mockRejectedValueOnce(new ApiError(404, "NOT_FOUND", "Equipment 9 not found"));
+      const { user } = await openPanel();
+
+      await user.click(footerButton("Delete"));
+      await user.click(footerButton("Delete"));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(await screen.findByText("Pump 3 was already removed.")).toBeInTheDocument();
+    });
+
+    it("keeps the confirmation open on a network error so it can be retried", async () => {
+      m.deleteEquipment.mockRejectedValueOnce(new ApiError(0, "NETWORK_ERROR", "Can't reach the server."));
+      const { user } = await openPanel();
+
+      await user.click(footerButton("Delete"));
+      await user.click(footerButton("Delete"));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Can't reach the server.");
+      expect(confirmation()).toBeInTheDocument();
+
+      await user.click(footerButton("Delete"));
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(m.deleteEquipment).toHaveBeenCalledTimes(2);
     });
   });
 });
