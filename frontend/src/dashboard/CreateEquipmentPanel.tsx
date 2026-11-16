@@ -23,7 +23,11 @@ interface Props {
 type CreateEquipmentBody = Parameters<typeof api.createEquipment>[0];
 
 /** Supervisor only: add a piece of equipment to a site. */
-export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Props) {
+export function CreateEquipmentPanel({
+  defaultSiteId,
+  onClose,
+  onCreated,
+}: Props) {
   const queryClient = useQueryClient();
   const initialSite = defaultSiteId ? String(defaultSiteId) : "";
   const [name, setName] = useState("");
@@ -57,7 +61,10 @@ export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Prop
 
   // Anything the user would lose by closing: asks before discarding.
   const dirty =
-    name.trim() !== "" || type.trim() !== "" || siteId !== initialSite || status !== DEFAULT_STATUS;
+    name.trim() !== "" ||
+    type.trim() !== "" ||
+    siteId !== initialSite ||
+    status !== DEFAULT_STATUS;
   const siteKnown = !!sites?.some((s) => String(s.id) === siteId);
   const complete = name.trim() !== "" && type.trim() !== "" && siteKnown;
   const canSubmit = complete && !mutation.isPending;
@@ -72,7 +79,12 @@ export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Prop
     event.preventDefault();
     if (!canSubmit) return;
     setError(null);
-    mutation.mutate({ name: name.trim(), type: type.trim(), siteId: Number(siteId), status });
+    mutation.mutate({
+      name: name.trim(),
+      type: type.trim(),
+      siteId: Number(siteId),
+      status,
+    });
   }
 
   // An edit after a failed attempt hides the old error.
@@ -86,23 +98,41 @@ export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Prop
       onRequestClose={requestClose}
       footer={
         <>
-          <button type="button" className={panelForm.secondary} onClick={requestClose} disabled={mutation.isPending}>
+          <button
+            type="button"
+            className={panelForm.secondary}
+            onClick={requestClose}
+            disabled={mutation.isPending}
+          >
             Cancel
           </button>
           {sites && (
-            <button type="submit" form="create-equipment-form" className={panelForm.primary} disabled={!canSubmit}>
-              {mutation.isPending && <span className={panelForm.spinner} aria-hidden="true" />}
+            <button
+              type="submit"
+              form="create-equipment-form"
+              className={panelForm.primary}
+              disabled={!canSubmit}
+            >
+              {mutation.isPending && (
+                <span className={panelForm.spinner} aria-hidden="true" />
+              )}
               {mutation.isPending ? "Adding…" : "Add equipment"}
             </button>
           )}
         </>
       }
     >
-      {sitesQuery.isPending && <p className={panelForm.muted}>Loading sites…</p>}
+      {sitesQuery.isPending && (
+        <p className={panelForm.muted}>Loading sites…</p>
+      )}
       {!sites && sitesQuery.isError && (
         <div role="alert" className={panelForm.error}>
           <p>Couldn't load sites. {errorMessage(sitesQuery.error)}</p>
-          <button type="button" className={panelForm.secondary} onClick={() => void sitesQuery.refetch()}>
+          <button
+            type="button"
+            className={panelForm.secondary}
+            onClick={() => void sitesQuery.refetch()}
+          >
             Retry
           </button>
         </div>
@@ -117,8 +147,16 @@ export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Prop
           )}
 
           {/* noValidate: the submit button stays disabled until the form is complete. */}
-          <form id="create-equipment-form" className={panelForm.form} onSubmit={handleSubmit} noValidate>
-            <fieldset disabled={mutation.isPending} className={panelForm.fieldset}>
+          <form
+            id="create-equipment-form"
+            className={panelForm.form}
+            onSubmit={handleSubmit}
+            noValidate
+          >
+            <fieldset
+              disabled={mutation.isPending}
+              className={panelForm.fieldset}
+            >
               <label className={panelForm.field}>
                 <span>
                   Name <span className={panelForm.required}>(required)</span>
@@ -197,7 +235,9 @@ export function CreateEquipmentPanel({ defaultSiteId, onClose, onCreated }: Prop
                   ))}
                 </select>
               </label>
-              <p className={panelForm.hint}>New equipment starts as checked just now.</p>
+              <p className={panelForm.hint}>
+                New equipment starts as checked just now.
+              </p>
             </fieldset>
           </form>
         </>

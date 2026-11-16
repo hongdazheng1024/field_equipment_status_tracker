@@ -41,3 +41,51 @@
   background: #fff4dc;
   border: 1px solid #f0c674;
 }
+
+/* Delete (supervisors): on the left of the footer, away from Save, and red so
+   it reads as destructive. A second, filled red button confirms it. */
+.deleteButton,
+.danger {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space) calc(var(--space) * 2);
+  border-radius: var(--radius);
+  border: 1px solid var(--status-down);
+  cursor: pointer;
+}
+
+.deleteButton {
+  margin-right: auto;
+  background: var(--color-surface);
+  color: var(--status-down);
+}
+
+.danger {
+  background: var(--status-down);
+  color: #fff;
+  font-weight: 600;
+}
+
+.deleteButton:disabled,
+.danger:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.confirmDelete {
+  flex: 1;
+  display: grid;
+  gap: var(--space);
+}
+
+.confirmDelete p {
+  margin: 0;
+}
+
+.confirmButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space);
+}

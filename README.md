@@ -92,6 +92,11 @@ Seed dates are relative to when you seeded, so items drift into "stale" over the
   - **Retries are safe:** each save carries a client-generated `changeId`. After a network error the same id is reused, so if the first attempt did reach the server it isn't applied twice; editing the form afterwards makes it a new change with a new id.
   - **After a save** the panel closes, the table, cards and sidebar badges refetch (React Query invalidation), and a confirmation is announced via `role="status"`.
   - Times that are in the future relative to the client (a change made after the panel opened, or device clock skew) show as "just now", never "in 3 minutes".
+- **Delete (supervisors only)**, from the edit panel: a red Delete button on the left of the footer, away from Save. It's a soft delete: the item disappears from the dashboard, its row and history stay in the database.
+  - **Two steps, inside the panel:** Delete swaps the footer for "Delete GEN-HD-004? It disappears from the dashboard; its history is kept." with **Keep it** / **Delete**. Focus moves to Keep it, so a stray Enter doesn't delete; Escape or a backdrop click backs out of the confirmation rather than closing the panel. An in-panel step instead of `window.confirm`: it can name the item, style the destructive button, and be tested by clicking real buttons.
+  - **Sends the version the panel shows** (`DELETE /api/equipment/:id?version=N`). A 409 (someone changed it meanwhile) switches to their version, says nothing was deleted, and needs a fresh confirmation. A 404 (someone else deleted it first) closes the panel with "… was already removed.". A network or server error keeps the confirmation open to retry.
+  - **After a delete** the table, cards and badges refetch (but not the deleted item itself, which would only 404), and focus moves to the "Deleted …" confirmation, since the row's Edit button is gone.
+  - **A page past the end** (deleting the only item on the last page, or an old link) moves to the last page instead of showing an empty table.
 - **Add equipment panel** (supervisors only; operators don't see the button, and the API answers 403 anyway): the same slide-over, opened with `?create=1`. Name, type, site and starting status; the site defaults to the one selected in the sidebar, and the type field suggests existing types so "Pump" isn't added again as "pump". Name and type are capped at the API's limits (100 / 50 characters). Closing after typing asks "Discard this new equipment?" first. Any API error (validation, 403, network) is shown in the panel and the form stays filled in. After a save the table, cards and badges refetch and a confirmation is announced.
 
 ## Skipped (so far)
@@ -100,6 +105,7 @@ Seed dates are relative to when you seeded, so items drift into "stale" over the
 - `created_by` on equipment: who added an item isn't recorded.
 - History of removed items isn't exposed through the API (it stays in the database).
 - Sorting by column header (the API already supports `sort` and `order`).
+- Undoing or restoring a deleted item: soft delete would allow it, but there's no restore endpoint yet.
 
 ## AI usage
 

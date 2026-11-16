@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/endpoints";
 import type { Equipment, EquipmentQuery } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
@@ -83,6 +83,36 @@ export function DashboardPage() {
   );
   const selectedSite = sites?.find((s) => s.id === filters.siteId);
   const list = listQuery.data;
+
+  // A page past the end (e.g. after deleting the only item on the last page,
+  // or an old link): go to the last page instead of showing an empty table.
+  // Skipped for placeholder data, which still belongs to the previous filters.
+  const lastPage =
+    list && !listQuery.isPlaceholderData
+      ? Math.max(1, Math.ceil(list.total / list.pageSize))
+      : undefined;
+  useEffect(() => {
+    if (lastPage !== undefined && filters.page > lastPage) {
+      updateFilters({ page: lastPage }, { replace: true });
+    }
+  }, [lastPage, filters.page, updateFilters]);
+
+  // After a delete the row's Edit button (where focus would go back) is gone,
+  // so move focus to the confirmation instead. Runs after the panel has closed
+  // and returned focus, so this wins.
+  const noticeRef = useRef<HTMLParagraphElement>(null);
+  const focusNoticeAfterClose = useRef(false);
+  useEffect(() => {
+    if (focusNoticeAfterClose.current && editId === undefined) {
+      focusNoticeAfterClose.current = false;
+      noticeRef.current?.focus();
+    }
+  });
+
+  function handleDeleted(message: string) {
+    setNotice(message);
+    focusNoticeAfterClose.current = true;
+  }
 
   function handleEdit(item: Equipment) {
     setNotice(null);
@@ -241,7 +271,12 @@ export function DashboardPage() {
           onClear={() => updateFilters(CLEARED)}
         />
 
-        <p role="status" className={notice ? styles.notice : undefined}>
+        <p
+          ref={noticeRef}
+          role="status"
+          tabIndex={-1}
+          className={notice ? styles.notice : undefined}
+        >
           {notice}
         </p>
 
@@ -256,6 +291,7 @@ export function DashboardPage() {
           initial={list?.data.find((item) => item.id === editId)}
           onClose={closePanel}
           onSaved={setNotice}
+          onDeleted={handleDeleted}
         />
       )}
       {/* Supervisors only; the API rejects anyone else with 403 anyway. */}
